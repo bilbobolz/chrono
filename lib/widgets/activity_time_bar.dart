@@ -16,20 +16,25 @@ class ActivityTimeBar extends ConsumerWidget {
       loading: () => const SizedBox(height: 8),
       error: (e, s) => const SizedBox(height: 8),
       data: (stats) {
-        if (stats.isEmpty) return const SizedBox(height: 8);
-        final total = stats.values.fold(0, (a, b) => a + b);
+        if (stats.isEmpty) {
+          return const Text(
+            'Aún no hay sesiones esta semana',
+            style: TextStyle(color: Colors.white38, fontSize: 12),
+          );
+        }
+        final total = stats.values.fold<int>(0, (a, b) => a + b);
         if (total == 0) return const SizedBox(height: 8);
 
         return activitiesAsync.when(
           loading: () => const SizedBox(height: 8),
           error: (e, s) => const SizedBox(height: 8),
-          data: (acts) => _buildBar(context, stats, acts, total),
+          data: (acts) => _buildList(context, stats, acts, total),
         );
       },
     );
   }
 
-  Widget _buildBar(
+  Widget _buildList(
     BuildContext context,
     Map<int, int> stats,
     activities,
@@ -41,48 +46,60 @@ class ActivityTimeBar extends ConsumerWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: SizedBox(
-            height: 10,
-            child: Row(
-              children: entries.map((e) {
-                final color = Color(actMap[e.key]?.colorValue ?? 0xFF6C63FF);
-                final flex = (e.value / total * 1000).round().clamp(1, 999);
-                return Expanded(
-                  flex: flex,
-                  child: Container(color: color),
-                );
-              }).toList(),
-            ),
+      children: entries.map((e) {
+        final act = actMap[e.key];
+        final color = Color(act?.colorValue ?? 0xFFE05A3A);
+        final pct = e.value / total;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration:
+                        BoxDecoration(color: color, shape: BoxShape.circle),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      act?.name ?? '?',
+                      style: const TextStyle(fontSize: 12, color: Colors.white70),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    formatDuration(e.value),
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: color),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${(pct * 100).round()}%',
+                    style: const TextStyle(fontSize: 11, color: Colors.white38),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: pct,
+                  minHeight: 6,
+                  backgroundColor: color.withAlpha(40),
+                  valueColor: AlwaysStoppedAnimation(color),
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 6),
-        Wrap(
-          spacing: 12,
-          runSpacing: 4,
-          children: entries.map((e) {
-            final act = actMap[e.key];
-            final color = Color(act?.colorValue ?? 0xFF6C63FF);
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${act?.name ?? '?'} · ${formatDuration(e.value)}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            );
-          }).toList(),
-        ),
-      ],
+        );
+      }).toList(),
     );
   }
 }

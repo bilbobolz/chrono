@@ -8,10 +8,10 @@ class AppTheme {
           seedColor: const Color(0xFFD94F2E),
           brightness: Brightness.dark,
         ),
-        scaffoldBackgroundColor: const Color(0xFF120C0B),
-        cardColor: const Color(0xFF1E1210),
+        scaffoldBackgroundColor: const Color(0xFF1A0404),
+        cardColor: const Color(0xFF2D0C0C),
         navigationBarTheme: const NavigationBarThemeData(
-          backgroundColor: Color(0xFF1E1210),
+          backgroundColor: Color(0xFF2D0C0C),
           indicatorColor: Color(0xFFD94F2E),
         ),
       );
