@@ -5,24 +5,24 @@ class AppTheme {
         useMaterial3: true,
         brightness: Brightness.dark,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6C63FF),
+          seedColor: const Color(0xFFD94F2E),
           brightness: Brightness.dark,
         ),
-        scaffoldBackgroundColor: const Color(0xFF0F0F1A),
-        cardColor: const Color(0xFF1A1A2E),
+        scaffoldBackgroundColor: const Color(0xFF120C0B),
+        cardColor: const Color(0xFF1E1210),
         navigationBarTheme: const NavigationBarThemeData(
-          backgroundColor: Color(0xFF1A1A2E),
-          indicatorColor: Color(0xFF6C63FF),
+          backgroundColor: Color(0xFF1E1210),
+          indicatorColor: Color(0xFFD94F2E),
         ),
       );
 
   static List<Color> activityColors = const [
-    Color(0xFF6C63FF),
-    Color(0xFFFF6584),
+    Color(0xFFE05A3A),
+    Color(0xFFE8A030),
     Color(0xFF43C6AC),
-    Color(0xFFF7971E),
     Color(0xFF4FC3F7),
     Color(0xFFCE93D8),
+    Color(0xFFFF6584),
     Color(0xFFA5D6A7),
     Color(0xFFFFCC02),
   ];

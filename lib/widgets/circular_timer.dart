@@ -18,17 +18,17 @@ class CircularTimer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 260,
-      height: 260,
+      width: 310,
+      height: 310,
       child: Stack(
         alignment: Alignment.center,
         children: [
           SizedBox(
-            width: 260,
-            height: 260,
+            width: 310,
+            height: 310,
             child: CircularProgressIndicator(
               value: progress,
-              strokeWidth: 10,
+              strokeWidth: 12,
               backgroundColor: color.withAlpha(40),
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
@@ -38,7 +38,7 @@ class CircularTimer extends StatelessWidget {
             children: [
               Text(
                 formatTimer(remainingSeconds),
-                style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                style: Theme.of(context).textTheme.displayLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       letterSpacing: 2,
                       color: Colors.white,

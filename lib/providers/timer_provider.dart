@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../database/database.dart';
+import '../services/sound_service.dart';
 import 'db_provider.dart';
 
 enum TimerPhase { work, breakPhase }
@@ -128,6 +129,7 @@ class TimerNotifier extends StateNotifier<TimerState> {
       final now = DateTime.now();
       final elapsed = state.totalSeconds;
       await _saveSession(elapsed, now);
+      playCompletionSound();
 
       if (state.phase == TimerPhase.work) {
         final pomodoros = state.completedPomodoros + 1;

@@ -71,6 +71,56 @@ class AppDatabase extends _$AppDatabase {
     }
     return map;
   }
+
+  Future<int> getTotalFocusSeconds() async {
+    final rows = await (select(sessions)
+          ..where((s) => s.sessionType.equals('work')))
+        .get();
+    return rows.fold<int>(0, (sum, s) => sum + s.durationSeconds);
+  }
+
+  Future<int> getActiveDaysCount() async {
+    final rows = await (select(sessions)
+          ..where((s) => s.sessionType.equals('work')))
+        .get();
+    return rows
+        .map((s) => DateTime(
+            s.startedAt.year, s.startedAt.month, s.startedAt.day))
+        .toSet()
+        .length;
+  }
+
+  Future<int> getCurrentStreak() async {
+    final rows = await (select(sessions)
+          ..where((s) => s.sessionType.equals('work')))
+        .get();
+    if (rows.isEmpty) return 0;
+
+    final dates = rows
+        .map((s) => DateTime(
+            s.startedAt.year, s.startedAt.month, s.startedAt.day))
+        .toSet()
+        .toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+
+    if (dates.first != today && dates.first != yesterday) return 0;
+
+    DateTime expected = dates.first;
+    int streak = 0;
+    for (final date in dates) {
+      if (date == expected) {
+        streak++;
+        expected = expected.subtract(const Duration(days: 1));
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
 }
 
 QueryExecutor _openConnection() {

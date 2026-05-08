@@ -121,13 +121,13 @@ class _ActivityTile extends StatelessWidget {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Container(
-          width: 44,
-          height: 44,
+          width: 52,
+          height: 52,
           decoration: BoxDecoration(
             color: color.withAlpha(40),
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.timer, color: color),
+          child: Icon(Icons.timer, color: color, size: 28),
         ),
         title: Text(activity.name,
             style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -140,11 +140,11 @@ class _ActivityTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.edit_outlined, size: 20),
+              icon: const Icon(Icons.edit_outlined, size: 26),
               onPressed: onEdit,
             ),
             IconButton(
-              icon: const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
+              icon: const Icon(Icons.delete_outline, size: 26, color: Colors.redAccent),
               onPressed: onDelete,
             ),
           ],
@@ -283,7 +283,7 @@ class _ActivityDialogState extends State<_ActivityDialog> {
   }
 }
 
-class _MinutePicker extends StatelessWidget {
+class _MinutePicker extends StatefulWidget {
   final String label;
   final int value;
   final int min;
@@ -299,25 +299,81 @@ class _MinutePicker extends StatelessWidget {
   });
 
   @override
+  State<_MinutePicker> createState() => _MinutePickerState();
+}
+
+class _MinutePickerState extends State<_MinutePicker> {
+  late TextEditingController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: '${widget.value}');
+  }
+
+  @override
+  void didUpdateWidget(_MinutePicker old) {
+    super.didUpdateWidget(old);
+    if (old.value != widget.value && _ctrl.text != '${widget.value}') {
+      _ctrl.text = '${widget.value}';
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _submit(String text) {
+    final v = int.tryParse(text);
+    if (v != null) {
+      final clamped = v.clamp(widget.min, widget.max);
+      widget.onChanged(clamped);
+      if (clamped != v) _ctrl.text = '$clamped';
+    } else {
+      _ctrl.text = '${widget.value}';
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         Expanded(
-            child: Text(label,
-                style: const TextStyle(fontSize: 13, color: Colors.white70))),
+          child: Text(widget.label,
+              style: const TextStyle(fontSize: 13, color: Colors.white70)),
+        ),
         IconButton(
-          icon: const Icon(Icons.remove),
-          onPressed: value > min ? () => onChanged(value - 1) : null,
+          icon: const Icon(Icons.remove, size: 22),
+          onPressed: widget.value > widget.min
+              ? () => widget.onChanged(widget.value - 1)
+              : null,
         ),
         SizedBox(
-          width: 36,
-          child: Text('$value',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          width: 56,
+          child: TextField(
+            controller: _ctrl,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            onSubmitted: _submit,
+            onTapOutside: (_) => _submit(_ctrl.text),
+            style: const TextStyle(
+                fontSize: 16, fontWeight: FontWeight.bold),
+            decoration: InputDecoration(
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8)),
+              isDense: true,
+            ),
+          ),
         ),
         IconButton(
-          icon: const Icon(Icons.add),
-          onPressed: value < max ? () => onChanged(value + 1) : null,
+          icon: const Icon(Icons.add, size: 22),
+          onPressed: widget.value < widget.max
+              ? () => widget.onChanged(widget.value + 1)
+              : null,
         ),
       ],
     );

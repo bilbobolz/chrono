@@ -15,11 +15,111 @@ class StatsScreen extends ConsumerWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: _GlobalSummary(),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
           child: _PeriodSelector(selected: period),
         ),
         Expanded(child: _StatsBody(period: period)),
       ],
+    );
+  }
+}
+
+class _GlobalSummary extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final totalAsync = ref.watch(totalFocusProvider);
+    final daysAsync = ref.watch(activeDaysProvider);
+    final streakAsync = ref.watch(streakProvider);
+
+    return Row(
+      children: [
+        _SummaryCard(
+          icon: Icons.local_fire_department,
+          iconColor: const Color(0xFFE05A3A),
+          label: 'Racha',
+          value: streakAsync.when(
+            data: (v) => '$v día${v == 1 ? '' : 's'}',
+            loading: () => '—',
+            error: (e, s) => '—',
+          ),
+        ),
+        const SizedBox(width: 8),
+        _SummaryCard(
+          icon: Icons.timer,
+          iconColor: const Color(0xFF4FC3F7),
+          label: 'Foco total',
+          value: totalAsync.when(
+            data: (s) => _formatHours(s),
+            loading: () => '—',
+            error: (e, s) => '—',
+          ),
+        ),
+        const SizedBox(width: 8),
+        _SummaryCard(
+          icon: Icons.calendar_today,
+          iconColor: const Color(0xFF43C6AC),
+          label: 'Días activo',
+          value: daysAsync.when(
+            data: (v) => '$v',
+            loading: () => '—',
+            error: (e, s) => '—',
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatHours(int seconds) {
+    final h = seconds ~/ 3600;
+    final m = (seconds % 3600) ~/ 60;
+    if (h > 0) return '${h}h ${m}m';
+    return '${m}m';
+  }
+}
+
+class _SummaryCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+
+  const _SummaryCard({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: iconColor, size: 26),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 11, color: Colors.white38),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

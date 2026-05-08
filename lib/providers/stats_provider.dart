@@ -56,3 +56,15 @@ final sessionsInPeriodProvider =
   final range = _rangeFor(period);
   return db.getSessionsInRange(range.start, range.end);
 });
+
+final totalFocusProvider = FutureProvider<int>((ref) async {
+  return ref.watch(dbProvider).getTotalFocusSeconds();
+});
+
+final activeDaysProvider = FutureProvider<int>((ref) async {
+  return ref.watch(dbProvider).getActiveDaysCount();
+});
+
+final streakProvider = FutureProvider<int>((ref) async {
+  return ref.watch(dbProvider).getCurrentStreak();
+});

@@ -57,8 +57,8 @@ class TimerScreen extends ConsumerWidget {
                   children: List.generate(
                     timer.completedPomodoros.clamp(0, 8),
                     (_) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: Icon(Icons.circle, size: 10, color: color),
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: Icon(Icons.circle, size: 13, color: color),
                     ),
                   ),
                 ),
@@ -188,7 +188,7 @@ class _TimerControls extends ConsumerWidget {
             child: IconButton.outlined(
               onPressed: () => notifier.stop(),
               icon: const Icon(Icons.stop),
-              iconSize: 28,
+              iconSize: 34,
             ),
           ),
         FilledButton(
@@ -203,14 +203,14 @@ class _TimerControls extends ConsumerWidget {
               : null,
           style: FilledButton.styleFrom(
             backgroundColor: color,
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 18),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
             ),
           ),
           child: Text(
             status == TimerStatus.running ? 'Pausar' : 'Iniciar',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ),
       ],
