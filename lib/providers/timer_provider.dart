@@ -8,6 +8,10 @@ enum TimerPhase { work, breakPhase }
 
 enum TimerStatus { idle, running, paused }
 
+enum TimerMode { pomodoro, libre }
+
+final timerModeProvider = StateProvider<TimerMode>((ref) => TimerMode.pomodoro);
+
 class TimerState {
   final int? activityId;
   final TimerPhase phase;
