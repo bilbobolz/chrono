@@ -190,40 +190,117 @@ class _PomodoroControls extends ConsumerWidget {
 
 // ─── Cronómetro libre ─────────────────────────────────────────────────────────
 
-class _FreeTimerSection extends ConsumerWidget {
+class _FreeTimerSection extends ConsumerStatefulWidget {
   final List<Activity> activities;
   const _FreeTimerSection({required this.activities});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_FreeTimerSection> createState() => _FreeTimerSectionState();
+}
+
+class _FreeTimerSectionState extends ConsumerState<_FreeTimerSection> {
+  late TextEditingController _nameCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(
+      text: ref.read(freeTimerProvider).activityName,
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
+
+  String _formatElapsed(int seconds) {
+    final h = seconds ~/ 3600;
+    final m = (seconds % 3600) ~/ 60;
+    final s = seconds % 60;
+    if (h > 0) {
+      return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    }
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(freeTimerProvider);
     final notifier = ref.read(freeTimerProvider.notifier);
-
-    Activity? selected;
-    if (state.activityId != null) {
-      try {
-        selected = activities.firstWhere((a) => a.id == state.activityId);
-      } catch (_) {}
-    }
-    final color = selected != null
-        ? Color(selected.colorValue)
-        : Theme.of(context).colorScheme.primary;
+    final isRunning = state.status == FreeTimerStatus.running;
+    final color = state.activityColor;
+    final canStart = _nameCtrl.text.trim().isNotEmpty;
 
     return Column(
       children: [
-        // Activity selector
-        if (activities.isEmpty)
-          OutlinedButton.icon(
-            onPressed: null,
-            icon: const Icon(Icons.add),
-            label: const Text('Creá una actividad primero'),
+        // Name field
+        TextField(
+          controller: _nameCtrl,
+          enabled: !isRunning,
+          onChanged: (v) {
+            setState(() {});
+            notifier.setName(v);
+          },
+          textCapitalization: TextCapitalization.sentences,
+          decoration: InputDecoration(
+            labelText: '¿Qué vas a hacer?',
+            hintText: 'Gym, Estudio, Lectura...',
+            prefixIcon: const Icon(Icons.edit_note_rounded),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14)),
+            filled: true,
+            fillColor: Theme.of(context).cardColor,
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Color picker (hidden while running)
+        if (!isRunning)
+          Wrap(
+            spacing: 10,
+            alignment: WrapAlignment.center,
+            children: AppTheme.activityColors.map((c) {
+              final selected = state.activityColor.toARGB32() == c.toARGB32();
+              return GestureDetector(
+                onTap: () => notifier.setColor(c),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: c,
+                    shape: BoxShape.circle,
+                    border: selected
+                        ? Border.all(color: Colors.white, width: 3)
+                        : null,
+                  ),
+                  child: selected
+                      ? const Icon(Icons.check, size: 18, color: Colors.white)
+                      : null,
+                ),
+              );
+            }).toList(),
           )
         else
-          _ActivitySelector(
-            activities: activities,
-            selectedId: state.activityId,
-            enabled: state.status == FreeTimerStatus.idle,
-            onSelect: (act) => notifier.selectActivity(act),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration:
+                    BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                state.activityName,
+                style: TextStyle(
+                    color: color, fontWeight: FontWeight.w600, fontSize: 15),
+              ),
+            ],
           ),
 
         const SizedBox(height: 48),
@@ -235,34 +312,28 @@ class _FreeTimerSection extends ConsumerWidget {
             fontSize: 72,
             fontWeight: FontWeight.bold,
             letterSpacing: 4,
-            color: state.status == FreeTimerStatus.running
-                ? color
-                : Colors.white38,
+            color: isRunning ? color : Colors.white38,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
           child: Text(_formatElapsed(state.elapsedSeconds)),
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
-          state.status == FreeTimerStatus.running
-              ? 'Registrando...'
-              : 'Listo para iniciar',
+          isRunning ? 'Registrando...' : 'Listo para iniciar',
           style: TextStyle(
-            color: state.status == FreeTimerStatus.running
-                ? color.withAlpha(180)
-                : Colors.white24,
+            color: isRunning ? color.withAlpha(180) : Colors.white24,
             fontSize: 14,
           ),
         ),
 
         const SizedBox(height: 48),
 
-        // Start / Stop
+        // Start / Stop button
         FilledButton(
-          onPressed: state.activityId != null
+          onPressed: (isRunning || canStart)
               ? () {
-                  if (state.status == FreeTimerStatus.running) {
+                  if (isRunning) {
                     notifier.stop();
                   } else {
                     notifier.start();
@@ -270,9 +341,7 @@ class _FreeTimerSection extends ConsumerWidget {
                 }
               : null,
           style: FilledButton.styleFrom(
-            backgroundColor: state.status == FreeTimerStatus.running
-                ? Colors.redAccent
-                : color,
+            backgroundColor: isRunning ? Colors.redAccent : color,
             padding:
                 const EdgeInsets.symmetric(horizontal: 48, vertical: 18),
             shape: RoundedRectangleBorder(
@@ -282,16 +351,12 @@ class _FreeTimerSection extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                state.status == FreeTimerStatus.running
-                    ? Icons.stop_rounded
-                    : Icons.play_arrow_rounded,
+                isRunning ? Icons.stop_rounded : Icons.play_arrow_rounded,
                 size: 28,
               ),
               const SizedBox(width: 8),
               Text(
-                state.status == FreeTimerStatus.running
-                    ? 'Detener'
-                    : 'Iniciar',
+                isRunning ? 'Detener' : 'Iniciar',
                 style: const TextStyle(
                     fontSize: 20, fontWeight: FontWeight.bold),
               ),
@@ -299,7 +364,7 @@ class _FreeTimerSection extends ConsumerWidget {
           ),
         ),
 
-        // Result card after stopping
+        // Result card
         if (state.lastSessionSeconds != null) ...[
           const SizedBox(height: 32),
           Container(
@@ -323,8 +388,9 @@ class _FreeTimerSection extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${selected?.name ?? 'Actividad'} · ${formatDuration(state.lastSessionSeconds!)}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  '${state.activityName} · ${formatDuration(state.lastSessionSeconds!)}',
+                  style:
+                      const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
               ],
             ),
@@ -332,16 +398,6 @@ class _FreeTimerSection extends ConsumerWidget {
         ],
       ],
     );
-  }
-
-  String _formatElapsed(int seconds) {
-    final h = seconds ~/ 3600;
-    final m = (seconds % 3600) ~/ 60;
-    final s = seconds % 60;
-    if (h > 0) {
-      return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-    }
-    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 }
 
